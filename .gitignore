@@ -1,0 +1,26 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+*.egg-info/
+node_modules/
+dist/
+artifacts/
+*.joblib
+transactions.csv
+transactions.json
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+docker-compose.override.yml
+
+# Local-only project/build notes — kept on disk, never committed.
+/Claude.md
+/CLAUDE_CODE_BUILD_PROMPT.md
+/SKILL.md
+
+# Transient runtime lock
+.claude/scheduled_tasks.lock
+
+# macOS
+.DS_Store
