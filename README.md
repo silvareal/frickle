@@ -1,4 +1,4 @@
-# Ahnlich Anomaly Detection Demo
+# Behavioral Transaction Monitoring with Ahnlich
 
 A demonstration of a **vector-similarity signal** built on **[Ahnlich DB](https://github.com/deven96/ahnlich)**,
 shown on transaction monitoring. It shows that Ahnlich does fast, metadata-aware
