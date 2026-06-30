@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "feature-pipeline"
+version = "1.0.0"
+description = "Shared, versioned feature pipeline for the Ahnlich anomaly demo"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "scikit-learn>=1.4",
+    "sentence-transformers>=2.6",
+]
+
+[tool.setuptools.packages.find]
+include = ["feature_pipeline*"]
