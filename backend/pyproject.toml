@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "decision-service"
+version = "1.0.0"
+description = "Async FastAPI decision service + retrain worker for the Ahnlich anomaly demo"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "asyncpg>=0.29",
+    "alembic>=1.13",
+    "sqlalchemy>=2.0",
+    "psycopg2-binary>=2.9",
+    "ahnlich-client-py==0.3.0",
+    "grpclib>=0.4",
+    "scikit-learn>=1.4",
+    "sentence-transformers>=2.6",
+    "joblib>=1.3",
+    "pandas>=2.1",
+    "numpy>=1.26",
+    "Faker>=24.0",
+    "httpx>=0.27",
+    "feature-pipeline",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "testcontainers>=4.0",
+    "ruff>=0.4",
+    "mypy>=1.9",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*", "worker*", "data*", "scripts*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "C90"]
+ignore = ["E501"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = false
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests", "../pipeline/tests"]
