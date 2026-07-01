@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     database_url: str = "postgresql://demo:demo@postgres:5432/anomaly"
     ahnlich_host: str = "ahnlich"
     ahnlich_port: int = 1369
+    # Text embedder for the pipeline's text track: "sentence_transformers" (in-process)
+    # or "ahnlich_ai" (offloaded to the ahnlich-ai proxy). Worker and service must
+    # agree so stored and online vectors match.
+    embedder: str = "sentence_transformers"
+    ahnlich_ai_host: str = "ahnlich-ai"
+    ahnlich_ai_port: int = 1370
     artifact_dir: str = "/artifacts"
     store_name: str = "transactions"
     knn_k: int = 5

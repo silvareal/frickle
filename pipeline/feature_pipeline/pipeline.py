@@ -25,6 +25,7 @@ from .constants import (
     NUMERICAL_FEATURES,
     TIMESTAMP_FEATURE,
 )
+from .embedders import Embedder, SentenceTransformerEmbedder
 from .version import PIPELINE_VERSION, TEXT_MODEL_NAME
 
 # Fixed divisors keep the timestamp track on a comparable scale to the other tracks
@@ -66,20 +67,23 @@ class UnifiedFeaturePipeline:
         )
         self.fitted = False
         self.output_dim: int | None = None
-        self._text_model: Any = None  # lazy; excluded from pickle
+        self._embedder: Embedder | None = None  # injected/lazy; excluded from pickle
 
-    # --- text model (lazy, not pickled) ----------------------------------------------
+    # --- text embedder (pluggable, not pickled) --------------------------------------
     @property
-    def text_model(self) -> Any:
-        if self._text_model is None:
-            from sentence_transformers import SentenceTransformer
+    def embedder(self) -> Embedder:
+        # Defaults to the in-process sentence-transformers model; the backend may
+        # inject an ahnlich-ai-backed embedder via set_embedder().
+        if getattr(self, "_embedder", None) is None:
+            self._embedder = SentenceTransformerEmbedder(self.text_model_name)
+        return self._embedder  # type: ignore[return-value]
 
-            self._text_model = SentenceTransformer(self.text_model_name)
-        return self._text_model
+    def set_embedder(self, embedder: Embedder) -> None:
+        self._embedder = embedder
 
     def __getstate__(self) -> dict[str, Any]:
         state = self.__dict__.copy()
-        state["_text_model"] = None  # reload by name after deserialization
+        state["_embedder"] = None  # re-attached after deserialization
         return state
 
     # --- framing ---------------------------------------------------------------------
@@ -102,8 +106,8 @@ class UnifiedFeaturePipeline:
 
     def _text_track(self, df: pd.DataFrame) -> np.ndarray:
         texts = [compose_text(r) for r in df.to_dict("records")]
-        emb = self.text_model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
-        return np.asarray(emb, dtype="float64") * TEXT_WEIGHT
+        emb = np.asarray(self.embedder.encode(texts), dtype="float64")
+        return emb * TEXT_WEIGHT
 
     # --- core: one path used by both fit and online ----------------------------------
     def _vectorize(self, df: pd.DataFrame) -> np.ndarray:

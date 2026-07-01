@@ -22,6 +22,7 @@ from app.artifacts import load_manifest, next_store_slot, save_artifacts
 from app.classify import CLEARED, FLAGGED
 from app.config import Settings, get_settings
 from app.db import Database
+from app.embedding import attach_embedder
 
 _SET_CHUNK = 500
 
@@ -63,6 +64,7 @@ async def run_retrain(db: Database, ahnlich: AhnlichClient, settings: Settings) 
 
     df = pd.DataFrame(rows)
     pipeline = UnifiedFeaturePipeline()
+    attach_embedder(pipeline, settings)
     vectors = pipeline.fit_transform_history(df)
     assert pipeline.output_dim == vectors.shape[1], "pipeline dimension mismatch"
 

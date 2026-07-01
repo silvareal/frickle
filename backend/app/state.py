@@ -7,6 +7,7 @@ from .ahnlich import AhnlichClient
 from .artifacts import Artifacts, load_artifacts, load_manifest
 from .config import Settings
 from .db import Database
+from .embedding import attach_embedder
 
 
 class AppState:
@@ -18,6 +19,10 @@ class AppState:
 
     def refresh_artifacts(self) -> Artifacts | None:
         self._artifacts = load_artifacts(self.settings.artifact_dir)
+        if self._artifacts is not None:
+            # A freshly-loaded pipeline has no embedder (not pickled) — re-attach the
+            # configured one so the online text track matches how the store was built.
+            attach_embedder(self._artifacts.pipeline, self.settings)
         return self._artifacts
 
     @property
