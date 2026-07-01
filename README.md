@@ -6,7 +6,7 @@ similarity search over **custom structured-data vectors**.
 
 > **What this is — and isn't.** This is a demonstration of a _similarity signal_,
 > not a deployable fraud-detection system. All data is **synthetic** (Faker). Labels
-> come from an unsupervised Isolation Forest — they are statistical outliers, and
+> come from an unsupervised Isolation Forest , they are statistical outliers, and
 > **outlier ≠ confirmed fraud**. The defensible claim is exactly: _fast,
 > metadata-aware similarity search over custom structured-data vectors._ See
 > [`docs/FRAUD_ENGINEER_NOTES.md`](docs/FRAUD_ENGINEER_NOTES.md) for the honest analysis.
