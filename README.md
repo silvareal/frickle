@@ -4,7 +4,7 @@ A demonstration of a **vector-similarity signal** built on **[Ahnlich DB](https:
 shown on transaction monitoring. It shows that Ahnlich does fast, metadata-aware
 similarity search over **custom structured-data vectors**.
 
-> **What this is — and isn't.** This is a demonstration of a _similarity signal_,
+> **What this is, and isn't.** This is a demonstration of a _similarity signal_,
 > not a deployable fraud-detection system. All data is **synthetic** (Faker). Labels
 > come from an unsupervised Isolation Forest , they are statistical outliers, and
 > **outlier ≠ confirmed fraud**. The defensible claim is exactly: _fast,
@@ -21,7 +21,7 @@ and the measured Ahnlich k-NN query time. Live decision feed below._
 
 A rules engine only catches what someone already thought to encode. The idea here:
 find transactions that _behave like_ past flagged cases — near neighbours in feature
-space — even when no rule matches. We turn each transaction into one vector, store it
+space, even when no rule matches. We turn each transaction into one vector, store it
 in Ahnlich with its label as metadata, and classify a new transaction by a k-NN vote
 (k=5, cosine similarity) against that store.
 
@@ -55,29 +55,29 @@ client → FastAPI Decision Service ──► PostgreSQL (source of truth)
                    Retrain Worker ──────────┘  (reads SSOT, rebuilds store)
 ```
 
-- **PostgreSQL** — source of truth for every transaction, label, and score.
-- **Ahnlich DB** — in-memory vector store; a **rebuildable cache**, never an SSOT.
+- **PostgreSQL**: source of truth for every transaction, label, and score.
+- **Ahnlich DB**: in-memory vector store; a **rebuildable cache**, never an SSOT.
   Its entire contents reconstruct from Postgres via the retrain worker. Losing the
   node is a non-event.
-- **`pipeline/`** — the shared, versioned feature pipeline (four tracks: scaled
+- **`pipeline/`**: the shared, versioned feature pipeline (four tracks: scaled
   numerics, frozen one-hot categoricals, timestamp decomposition, MiniLM text
   embedding). The _same code path_ runs offline and online, which is what prevents
-  training/serving skew — guarded by `pipeline/tests/test_skew.py`. The text track is
+  training/serving skew: guarded by `pipeline/tests/test_skew.py`. The text track is
   deliberately **down-weighted** (`TEXT_WEIGHT`) so cosine similarity is driven by the
   structured signal (amount, channel, country, time) rather than descriptive free
-  text — this is, after all, a structured-data similarity demo.
-- **Text embedding via `ahnlich-ai`** — the text track's `all-MiniLM-L6-v2` embedding
+  text: this is, after all, a structured-data similarity demo.
+- **Text embedding via `ahnlich-ai`**: the text track's `all-MiniLM-L6-v2` embedding
   is produced by the **ahnlich-ai proxy** (run `--without-db` as a pure text→vector
   service), not by a model bundled in the backend. The embedder is pluggable
   (`EMBEDDER=ahnlich_ai` | `sentence_transformers`); ahnlich-ai's output matches the
   in-process model to ~1e-7, so the store stays consistent. The numeric/category/time
-  tracks stay in our pipeline — ahnlich-ai only handles the free text.
-- **Retrain worker** — fits the pipeline + Isolation Forest, rebuilds the store via
+  tracks stay in our pipeline, ahnlich-ai only handles the free text.
+- **Retrain worker**: fits the pipeline + Isolation Forest, rebuilds the store via
   **atomic swap** (build a new slot, verify, flip the pointer), writes labels back.
   The anomaly detector fits on the **structured block only** (not the 384-dim text
   track), so its outlier labels reflect transaction structure instead of textual
   oddities. `contamination` is a configurable operating threshold.
-- **Decision service** — async FastAPI: write Postgres first → vectorize off the
+- **Decision service**: async FastAPI: write Postgres first → vectorize off the
   event loop → k-NN query Ahnlich → vote → derive a reason → index the vector back →
   update Postgres → return the verdict. Degrades gracefully if Ahnlich is down.
 
@@ -86,7 +86,7 @@ The online vector dimension always equals the pipeline's output dimension (423 =
 
 ### Demonstration domains: card fraud + CBN (Nigeria)
 
-The synthetic generator produces two legitimate regions — US and Nigerian (NG)
+The synthetic generator produces two legitimate regions, US and Nigerian (NG)
 traffic with region-appropriate channels (NG: `bank_transfer`/NIP, `ussd`, `pos`,
 `mobile_money`) and categories (`airtime`, `fx_remittance`). On top of that it
 plants ten fraud typologies, round-robin:
@@ -101,7 +101,7 @@ both US and NG as domestic — legitimate Nigerian transactions are **not** pain
 as suspicious; only billing outside the domestic set is. This keeps the
 good-vs-fraud contrast honest rather than letting fraud separate trivially on
 country. As always: synthetic data, unsupervised labels (outlier ≠ fraud), and a
-similarity signal — not a real CBN/AML system.
+similarity signal , not a real CBN/AML system.
 
 ## Measured latency
 
@@ -113,7 +113,7 @@ make loadtest   # fires 200 synthetic transactions, prints p50/p99
 
 This reports both end-to-end request latency and the isolated Ahnlich k-NN query
 time (the `latency_ms` field returned per decision). Run it on your machine and cite
-the number it prints — the demo deliberately does not bake in a figure it can't back up.
+the number it prints , the demo deliberately does not bake in a figure it can't back up.
 
 A 200-transaction run measured on a developer laptop (Docker Desktop, Apple Silicon,
 2200-row store) produced:
@@ -123,14 +123,14 @@ A 200-transaction run measured on a developer laptop (Docker Desktop, Apple Sili
 | Ahnlich k-NN query (`latency_ms`) | ~7.8 ms | ~45 ms  |
 | end-to-end `/process` request     | ~51 ms  | ~146 ms |
 
-These are illustrative of one machine — regenerate your own with `make loadtest`. The
+These are illustrative of one machine , regenerate your own with `make loadtest`. The
 k-NN query is isolated from the rest of the request so the store's contribution is
 visible on its own.
 
 ## How it maps to Ahnlich's strengths
 
 - **Custom structured-data vectors.** The vectors are not generic image/text
-  embeddings — they are purpose-built transaction features. Ahnlich stores and
+  embeddings , they are purpose-built transaction features. Ahnlich stores and
   searches them directly.
 - **Metadata-aware.** Each vector carries `{label, tx_id, fraud_scenario, order_price}`
   as metadata, returned with each neighbour so the decision is explainable.
@@ -145,7 +145,7 @@ Confirmed-fraud labels; model-risk governance and independent validation;
 explainability for adverse decisions; audit trails; fair-lending testing;
 data-residency/retention surviving retrain; ensemble context (supervised models,
 rules, velocity, device/geo, graph); and case management with human review. This
-similarity signal is one input among those — stating that gap is the point. The demo
+similarity signal is one input among those , stating that gap is the point. The demo
 also shows a real weakness on purpose: k-NN voting **under-flags lone outliers**
 (e.g. a whale transaction with no similar flagged precedent). That behaviour is
 surfaced, not hidden.
@@ -156,7 +156,7 @@ surfaced, not hidden.
 make test
 ```
 
-- `pipeline/tests/test_skew.py` — keystone: offline and online vectors are identical.
+- `pipeline/tests/test_skew.py` , keystone: offline and online vectors are identical.
 - `backend/tests/test_classify.py` — pure vote/score/reason logic.
 - `backend/tests/test_pipeline_contract.py` — gRPC calls against a **real Ahnlich** container.
 - `backend/tests/test_api.py` — full `/process` path against real Postgres + Ahnlich,
