@@ -17,6 +17,8 @@ dsn = os.environ.get("DATABASE_URL", "postgresql://demo:demo@postgres:5432/anoma
 u = urllib.parse.urlparse(dsn)
 wait(u.hostname, u.port or 5432, "postgres")
 wait(os.environ.get("AHNLICH_HOST", "ahnlich"), int(os.environ.get("AHNLICH_PORT", "1369")), "ahnlich")
+if os.environ.get("EMBEDDER") == "ahnlich_ai":
+    wait(os.environ.get("AHNLICH_AI_HOST", "ahnlich-ai"), int(os.environ.get("AHNLICH_AI_PORT", "1370")), "ahnlich-ai")
 PY
 
 echo "Running database migrations..."

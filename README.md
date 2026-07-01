@@ -29,7 +29,7 @@ in Ahnlich with its label as metadata, and classify a new transaction by a k-NN 
 
 ```bash
 cp .env.example .env
-make up        # build + start postgres, ahnlich, backend, frontend
+make up        # build + start postgres, ahnlich, ahnlich-ai, backend, frontend
 make seed      # load 2200 synthetic rows, fit the pipeline, build the store
 open http://localhost:5173
 ```
@@ -60,12 +60,18 @@ client → FastAPI Decision Service ──► PostgreSQL (source of truth)
   Its entire contents reconstruct from Postgres via the retrain worker. Losing the
   node is a non-event.
 - **`pipeline/`** — the shared, versioned feature pipeline (four tracks: scaled
-  numerics, frozen one-hot categoricals, timestamp decomposition, sentence-transformer
-  text embedding). The _same code path_ runs offline and online, which is what
-  prevents training/serving skew — guarded by `pipeline/tests/test_skew.py`. The text
-  track is deliberately **down-weighted** (`TEXT_WEIGHT`) so cosine similarity is
-  driven by the structured signal (amount, channel, country, time) rather than
-  descriptive free text — this is, after all, a structured-data similarity demo.
+  numerics, frozen one-hot categoricals, timestamp decomposition, MiniLM text
+  embedding). The _same code path_ runs offline and online, which is what prevents
+  training/serving skew — guarded by `pipeline/tests/test_skew.py`. The text track is
+  deliberately **down-weighted** (`TEXT_WEIGHT`) so cosine similarity is driven by the
+  structured signal (amount, channel, country, time) rather than descriptive free
+  text — this is, after all, a structured-data similarity demo.
+- **Text embedding via `ahnlich-ai`** — the text track's `all-MiniLM-L6-v2` embedding
+  is produced by the **ahnlich-ai proxy** (run `--without-db` as a pure text→vector
+  service), not by a model bundled in the backend. The embedder is pluggable
+  (`EMBEDDER=ahnlich_ai` | `sentence_transformers`); ahnlich-ai's output matches the
+  in-process model to ~1e-7, so the store stays consistent. The numeric/category/time
+  tracks stay in our pipeline — ahnlich-ai only handles the free text.
 - **Retrain worker** — fits the pipeline + Isolation Forest, rebuilds the store via
   **atomic swap** (build a new slot, verify, flip the pointer), writes labels back.
   The anomaly detector fits on the **structured block only** (not the 384-dim text

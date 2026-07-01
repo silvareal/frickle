@@ -20,18 +20,18 @@ from .state import AppState
 
 
 async def _warm_embedding_model(state: AppState) -> None:
-    """Load the sentence-transformers model at startup (off the event loop) so the
-    first real request isn't penalised by the lazy model load. No-op if no fitted
-    pipeline exists yet (pre-seed)."""
+    """Warm the text embedder at startup (off the event loop) so the first real
+    request isn't penalised — loads the local model, or triggers the ahnlich-ai
+    model load. No-op if no fitted pipeline exists yet (pre-seed)."""
     artifacts = state.artifacts
     if artifacts is None:
         return
     try:
         loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, lambda: artifacts.pipeline.text_model)
-        logging.getLogger("decision_service").info("embedding model warmed")
+        await loop.run_in_executor(None, lambda: artifacts.pipeline.embedder.encode(["warm up"]))
+        logging.getLogger("decision_service").info("embedder warmed")
     except Exception:
-        logging.getLogger("decision_service").warning("embedding model warm-up skipped", exc_info=True)
+        logging.getLogger("decision_service").warning("embedder warm-up skipped", exc_info=True)
 
 
 @asynccontextmanager
